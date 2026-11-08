@@ -14,10 +14,7 @@ end
 local last_menu = nil
 
 local function OpenHitmarkersMenu(icon, window)
-
-    if IsValid( last_menu ) then
-        last_menu:Close()
-    end
+    if IsValid( last_menu ) then last_menu:Close() end
 
     window = vgui.Create( "DFrame" )
     window:SetSize( ScrW() * 0.5, ScrH() * 0.9 )
@@ -35,7 +32,7 @@ local function OpenHitmarkersMenu(icon, window)
     pan:Dock(FILL)
 
     function pan:Paint( w, h )
-        draw.RoundedBox(2, 0, 0, w, h, Color(255,255,255))
+        draw.RoundedBox(2, 0, 0, w, h, Color(236, 236, 236))
     end
 
     pan:SetName( "" )
@@ -44,13 +41,14 @@ local function OpenHitmarkersMenu(icon, window)
     local presetPanel = pan:ToolPresets( "hitmarkers_presets", {
         ["hitmarkers_count"] = 4,
         ["hitmarkers_offset_angle"] = 45,
-        ["hitmarkers_lifetime"] = 1,
+        ["hitmarkers_lifetime"] = 0.3,
         ["hitmarkers_length"] = 20,
         ["hitmarkers_width"] = 60,
         ["hitmarkers_spacing"] = 10,
         ["hitmarkers_rotation_speed"] = 0,
         ["hitmarkers_spread_speed"] = 0,
         ["hitmarkers_color"] = "255 255 255",
+        ["hitmarkers_headshot_color"] = "255 0 0",
 
         ["hitmarkers_volume"] = 1,
         ["hitmarkers_sound"] = "hitmarkers_improved/hitmarker.ogg",
@@ -59,6 +57,8 @@ local function OpenHitmarkersMenu(icon, window)
 
         ["hitmarkers_armor_x"] = -0.05,
         ["hitmarkers_armor_y"] = 0,
+
+        ["hitmarkers_fontsize"] = 14,
     } )
 
     pan:CheckBox( "Enable Hitmarkers", "hitmarkers_enabled" )
@@ -78,7 +78,13 @@ local function OpenHitmarkersMenu(icon, window)
 
     local markerColorMixer = vgui.Create( "DColorMixer", pan )
     markerColorMixer:Dock( TOP )
-    markerColorMixer:DockMargin(10, 0, 20, 0)
+    markerColorMixer:DockMargin(10, 10, 20, 20)
+    markerColorMixer:SetLabel("Basic Color")
+
+    local headshotMarkerColorMixer = vgui.Create( "DColorMixer", pan )
+    headshotMarkerColorMixer:Dock( TOP )
+    headshotMarkerColorMixer:DockMargin(10, 0, 20, 0)
+    headshotMarkerColorMixer:SetLabel("Headshot Color")
 
     local _onSelect = presetPanel.OnSelect -- Call original function first.
     function presetPanel:OnSelect( id, value, data )
@@ -86,15 +92,25 @@ local function OpenHitmarkersMenu(icon, window)
         if not data then return end
         if not data.hitmarkers_color then return end
         local r, g, b = string.match( data.hitmarkers_color, "(%d+) (%d+) (%d+)" )
+        local headR, headG, headB = string.match( data.hitmarkers_headshot_color, "(%d+) (%d+) (%d+)" )
         markerColorMixer:SetColor( Color( r, g, b ) )
+        headshotMarkerColorMixer:SetColor( Color( headR, headG, headB ) )
     end
 
     local r, g, b = string.match( HITMARKERS_IMPROVED.CVARS.markersColor:GetString(), "(%d+) (%d+) (%d+)" )
     markerColorMixer:SetColor( Color( r, g, b ) )
 
+    local headR, headG, headB = string.match( HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString(), "(%d+) (%d+) (%d+)" )
+    headshotMarkerColorMixer:SetColor( Color( headR, headG, headB ) )
+
     function markerColorMixer:ValueChanged( color )
         local r, g, b = color.r, color.g, color.b
         RunConsoleCommand( "hitmarkers_color", r .. " " .. g .. " " .. b )
+    end
+
+    function headshotMarkerColorMixer:ValueChanged( color )
+        local r, g, b = color.r, color.g, color.b
+        RunConsoleCommand( "hitmarkers_headshot_color", r .. " " .. g .. " " .. b )
     end
 
     DividerLabel( pan, "Armor Icon Settings" )
@@ -103,6 +119,9 @@ local function OpenHitmarkersMenu(icon, window)
     pan:NumSlider( "X Offset", "hitmarkers_armor_x", -1, 1, 2 )
     pan:NumSlider( "Y Offset", "hitmarkers_armor_y", -1, 1, 2 )
     pan:ControlHelp( "Offsets are screen percentages. They start in the center at 0." )
+
+    DividerLabel( pan, "Font Settings" )
+    pan:NumSlider("Font Size", "hitmarkers_fontsize", 4, 32, 0)
 
     DividerLabel( pan, "Sound Settings" )
 

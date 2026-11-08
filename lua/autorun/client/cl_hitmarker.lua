@@ -14,6 +14,7 @@ HITMARKERS_IMPROVED.CVARS = {
     markersRotSpeed = CreateClientConVar( "hitmarkers_rotation_speed" , "0", true, true, "rotation speed of hitmarkers"),
     markersSpreadSpeed = CreateClientConVar( "hitmarkers_spread_speed" , "0", true, true, "spread speed of hitmarkers"),
     markersColor = CreateClientConVar( "hitmarkers_color" , "255 255 255", true, true, "color of hitmarkers in RGB format"),
+    markersHeadshotColor = CreateClientConVar( "hitmarkers_headshot_color" , "255 255 255", true, true, "color of headshot hitmarkers in RGB format"),
     markersVolume = CreateClientConVar( "hitmarkers_volume" , "1", true, true, "volume of hitmarkers"),
     markersSound = CreateClientConVar( "hitmarkers_sound" , "hitmarkers_improved/hitmarker.ogg", true, true, "sound of hitmarkers"),
     markersHeadSound = CreateClientConVar( "hitmarkers_head_sound" , "hitmarkers_improved/hitmarker_head.ogg", true, true, "sound of headshot hitmarkers"),
@@ -21,13 +22,31 @@ HITMARKERS_IMPROVED.CVARS = {
     armorEnabled = CreateClientConVar( "hitmarkers_armor_enabled" , "1", true, true, "enable/disable armor symbol"),
     armorX = CreateClientConVar( "hitmarkers_armor_x" , "-0.05", true, true, "x offset of armor symbol" ),
     armorY = CreateClientConVar( "hitmarkers_armor_y" , "0", true, true, "y offset of armor symbol" ),
+    fontSize = CreateClientConVar( "hitmarkers_fontsize" , "0", true, true, "size of the damage text" ),
 }
+
+surface.CreateFont("hitmarkers_improved_markerfont", {
+        font = "Oxanium ExtraLight",
+        weight = 300,
+        size = ScreenScaleH(8)
+    })
+
+cvars.AddChangeCallback("hitmarkers_fontsize", function(_, oldValue, newValue)
+    local n = tonumber(newValue)
+    if not n then return end
+    
+    surface.CreateFont("hitmarkers_improved_markerfont", {
+        font = "Oxanium ExtraLight",
+        weight = 300,
+        size = ScreenScaleH(n)
+    })
+end)
 
 
 local DEG2RAD = math.pi / 180
 
 local basicHitmarkerMat = Material( "hitmarkers_improved/basic_hitmarker.png"  )
-local redHitmarkerMat = Material( "hitmarkers_improved/red_hitmarker.png"  )
+local headshotHitmarkerInsideMat = Material( "hitmarkers_improved/hitmarker_inside.png"  )
 local armorMat = Material( "hitmarkers_improved/armor_symbol.png"  )
 
 local function playSound( soundPath, volume )
@@ -83,6 +102,30 @@ net.Receive("HitmarkersImproved.Hit", function()
     dmgFrame = FrameNumber()
 end )
 
+local function DrawHitmarker( x, y, length, width, rotation, headshot )
+    surface.SetMaterial( basicHitmarkerMat )
+    surface.DrawTexturedRectRotated(
+        x,
+        y,
+        length,
+        width,
+        rotation
+    )
+    if headshot then
+        local prevColor = surface.GetDrawColor()
+        surface.SetMaterial( headshotHitmarkerInsideMat )
+        surface.SetDrawColor(255, 255, 255, prevColor.a)
+        surface.DrawTexturedRectRotated(
+            x,
+            y,
+            length,
+            width,
+            rotation
+        )
+        surface.SetDrawColor(prevColor)
+    end
+end
+
 hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     if not HITMARKERS_IMPROVED.CVARS.markersEnabled:GetBool() then return end
 
@@ -96,13 +139,18 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     local rotSpeed = HITMARKERS_IMPROVED.CVARS.markersRotSpeed:GetFloat()
     local spreadSpeed = HITMARKERS_IMPROVED.CVARS.markersSpreadSpeed:GetFloat()
     local color = HITMARKERS_IMPROVED.CVARS.markersColor:GetString()
+    local headshotColor = HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString()
 
     local r, g, b = string.match( color, "(%d+) (%d+) (%d+)" )
     r, g, b = tonumber( r ), tonumber( g ), tonumber( b )
 
+    local headR, headG, headB = string.match( headshotColor, "(%d+) (%d+) (%d+)" )
+    headR, headG, headB = tonumber( headR ), tonumber( headG ), tonumber( headB )
+
     for i = #markerHistory, 1, -1 do
         local markerData = markerHistory[i]
         local hadArmor = markerData.hadArmor and HITMARKERS_IMPROVED.CVARS.armorEnabled:GetBool()
+        local showHeadshot = markerData.headshot and not hadArmor
 
         if hadArmor then
             surface.SetDrawColor( 0, 127, 255, markerData.life * 255 )
@@ -110,8 +158,9 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
             surface.SetDrawColor( r, g, b, markerData.life * 255 )
         end
 
-        if markerData.headshot and not hadArmor then
-            surface.SetMaterial( redHitmarkerMat )
+        if showHeadshot then
+            surface.SetMaterial( headshotHitmarkerInsideMat )
+            surface.SetDrawColor( headR, headG, headB, markerData.life * 255 )
         else
             surface.SetMaterial( basicHitmarkerMat )
         end
@@ -126,28 +175,31 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
 
                 local sideSpacing = width * 0.05
 
-                surface.DrawTexturedRectRotated(
+                DrawHitmarker(
                     scrW * 0.5 - ( x * ( spacing + length * 0.5 + markerData.spread ) - offX * sideSpacing ) * screenRatio,
                     scrH * 0.5 - ( y * ( spacing + length * 0.5 + markerData.spread ) - offY * sideSpacing ) * screenRatio,
                     length * screenRatio,
                     width * screenRatio,
-                    -ang
+                    -ang,
+                    showHeadshot
                 )
 
-                surface.DrawTexturedRectRotated(
+                DrawHitmarker(
                     scrW * 0.5 - ( x * ( spacing + length * 0.5 + markerData.spread ) + offX * sideSpacing ) * screenRatio,
                     scrH * 0.5 - ( y * ( spacing + length * 0.5 + markerData.spread ) + offY * sideSpacing ) * screenRatio,
                     length * screenRatio,
                     width * screenRatio,
-                    -ang
+                    -ang,
+                    showHeadshot
                 )
             else
-                surface.DrawTexturedRectRotated(
+                DrawHitmarker(
                     scrW * 0.5 - x * ( spacing + length * 0.5 + markerData.spread ) * screenRatio,
                     scrH * 0.5 - y * ( spacing + length * 0.5 + markerData.spread ) * screenRatio,
                     length * screenRatio,
                     width * screenRatio,
-                    -ang
+                    -ang,
+                    showHeadshot
                 )
             end
 
@@ -178,7 +230,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
 
     -- Damage Number Drawing --
     draw.NoTexture()
-    surface.SetFont( "HudHintTextLarge" )
+    surface.SetFont( "hitmarkers_improved_markerfont" )
 
     surface.SetTextColor( 255, 0, 0, 255 * dmgAccumLife )
 
