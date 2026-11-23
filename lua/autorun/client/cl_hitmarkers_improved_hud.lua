@@ -20,7 +20,8 @@ HITMARKERS_IMPROVED.CVARS = {
     markersSound = CreateClientConVar( "hitmarkers_sound", "hitmarkers_improved/hitmarker.ogg", true, false, "sound of hitmarkers"),
     markersHeadSound = CreateClientConVar( "hitmarkers_head_sound", "hitmarkers_improved/hitmarker_head.ogg", true, false, "sound of headshot hitmarkers"),
     markersKillSound = CreateClientConVar( "hitmarkers_kill_sound", "hitmarkers_improved/hitmarker_kill.ogg", true, false, "sound of kill hitmarkers"),
-    armorEnabled = CreateClientConVar( "hitmarkers_armor_enabled", "1", true, false, "enable/disable armor symbol"),
+    armorEnabled = CreateClientConVar( "hitmarkers_armor_enabled", "1", true, false, "enable/disable armor indication"),
+    armorSymbol = CreateClientConVar( "hitmarkers_armor_symbol", "0", true, false, "enable/disable armor symbol"),
     armorX = CreateClientConVar( "hitmarkers_armor_x", "-0.05", true, false, "x offset of armor symbol" ),
     armorY = CreateClientConVar( "hitmarkers_armor_y", "0", true, false, "y offset of armor symbol" ),
     fontSize = CreateClientConVar( "hitmarkers_fontsize", "8", true, false, "size of the damage text" ),
@@ -250,14 +251,17 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
         -- Armor Drawing --
         if hadArmor then
             surface.SetDrawColor( 0, 127, 255, alpha )
-            surface.SetMaterial( armorMat )
-            surface.DrawTexturedRectRotated(
-                scrW * 0.5 + HITMARKERS_IMPROVED.CVARS.armorX:GetFloat() * scrW * 0.5,
-                scrH * 0.5 + HITMARKERS_IMPROVED.CVARS.armorY:GetFloat() * scrH * 0.5,
-                32 * screenRatio,
-                32 * screenRatio,
-                0
-            )
+
+            if HITMARKERS_IMPROVED.CVARS.armorSymbol:GetBool() then
+                surface.SetMaterial( armorMat )
+                surface.DrawTexturedRectRotated(
+                    scrW * 0.5 + HITMARKERS_IMPROVED.CVARS.armorX:GetFloat() * scrW * 0.5,
+                    scrH * 0.5 + HITMARKERS_IMPROVED.CVARS.armorY:GetFloat() * scrH * 0.5,
+                    32 * screenRatio,
+                    32 * screenRatio,
+                    0
+                )
+            end
         end
 
         markerData.life = markerData.life - FrameTime() / math.max( 0.01, markerData.lifetime )

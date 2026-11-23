@@ -68,9 +68,10 @@ local function OpenHitmarkersMenu(icon, window)
 
     pan:CheckBox( "Enable Hitmarkers", "hitmarkers_enabled" )
     pan:CheckBox( "Show Only One Hitmarker At A Time", "hitmarkers_oneonly" )
+    pan:CheckBox( "Indicate Armor Damage", "hitmarkers_armor_enabled" )
 
     DividerLabel( pan, "Hitmarker Settings" )
-    
+
 
     pan:NumSlider( "Count", "hitmarkers_count", 1, 360, 0 )
     pan:NumSlider( "Offset Angle", "hitmarkers_offset_angle", 0, 360, 0 )
@@ -125,8 +126,8 @@ local function OpenHitmarkersMenu(icon, window)
     end
 
     DividerLabel( pan, "Armor Icon Settings" )
-    
-    pan:CheckBox( "Show Armor Icon", "hitmarkers_armor_enabled" )
+
+    pan:CheckBox( "Show Armor Icon", "hitmarkers_armor_symbol" )
     pan:NumSlider( "X Offset", "hitmarkers_armor_x", -1, 1, 2 )
     pan:NumSlider( "Y Offset", "hitmarkers_armor_y", -1, 1, 2 )
     pan:ControlHelp( "Offsets are screen percentages. They start in the center at 0." )
