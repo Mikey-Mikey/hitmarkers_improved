@@ -199,7 +199,9 @@ local outlineColor = Color( 0, 0, 0 )
 hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     if not cfg.markersEnabled then return end
 
-    if #markerHistory == 0 and #dmgNumTable == 0 then return end
+    local markerHistoryCount = #markerHistory
+    local dmgNumTableCount = #dmgNumTable
+    if markerHistoryCount == 0 and dmgNumTableCount == 0 then return end
 
     local scrW, scrH = ScrW(), ScrH()
     local screenRatio = scrH / 1080
@@ -218,7 +220,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     local numberOutline = cfg.numberOutline
     local numberOutlineColor = cfg.numberOutlineColor
 
-    for i = #markerHistory, 1, -1 do
+    for i = markerHistoryCount, 1, -1 do
         local markerData = markerHistory[i]
         local hadArmor = markerData.hadArmor and armorEnabled
         local showHeadshot = markerData.headshot
@@ -309,7 +311,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     surface.SetFont( "hitmarkers_improved_markerfont" )
 
     local dmgYOffset = 0
-    for i = #dmgNumTable, 1, -1 do
+    for i = dmgNumTableCount, 1, -1 do
         local dmgNumber = dmgNumTable[i]
         local death = dmgNumber.death
         local dmgAlpha = math.Remap( 1 - ( 1 - dmgNumber.life )^10, 0.8, 1, 0, 1 ) * 255
