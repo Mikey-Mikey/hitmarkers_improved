@@ -11,6 +11,20 @@ local function DividerLabel( parent, text )
     return divider
 end
 
+local function CreateColorMixer( panel, cvarName )
+    local colorMixer = vgui.Create( "DColorMixer", panel )
+    colorMixer:Dock( TOP )
+    colorMixer:DockMargin( 10, 10, 20, 0 )
+    colorMixer:SetLabel("Basic Color")
+
+    function colorMixer:ValueChanged( color )
+        local r, g, b = color.r, color.g, color.b
+        RunConsoleCommand( cvarName, r .. " " .. g .. " " .. b )
+    end
+
+    return colorMixer
+end
+
 local last_menu = nil
 
 local function OpenHitmarkersMenu(icon, window)
@@ -65,6 +79,7 @@ local function OpenHitmarkersMenu(icon, window)
 
         ["hitmarkers_fontsize"] = 8,
         ["hitmarkers_worldspace_numbers"] = 0,
+        ["hitmarkers_number_outline_color"] = "0 0 0",
     } )
 
     pan:CheckBox( "Enable Hitmarkers", "hitmarkers_enabled" )
@@ -83,20 +98,18 @@ local function OpenHitmarkersMenu(icon, window)
     pan:NumSlider( "Rotation Speed", "hitmarkers_rotation_speed", 0, 720, 2 )
     pan:NumSlider( "Spread Speed", "hitmarkers_spread_speed", 0, 1000, 2 )
 
-    local markerColorMixer = vgui.Create( "DColorMixer", pan )
-    markerColorMixer:Dock( TOP )
-    markerColorMixer:DockMargin( 10, 10, 20, 0 )
+    local markerColorMixer = CreateColorMixer( pan, "hitmarkers_color" )
     markerColorMixer:SetLabel("Basic Color")
 
-    local headshotMarkerColorMixer = vgui.Create( "DColorMixer", pan )
-    headshotMarkerColorMixer:Dock( TOP )
-    headshotMarkerColorMixer:DockMargin(10, 10, 20, 0)
+    local headshotMarkerColorMixer = CreateColorMixer( pan, "hitmarkers_headshot_color" )
     headshotMarkerColorMixer:SetLabel("Headshot Color")
 
-    local killMarkerColorMixer = vgui.Create( "DColorMixer", pan )
-    killMarkerColorMixer:Dock( TOP )
-    killMarkerColorMixer:DockMargin( 10, 10, 20, 0 )
+    local killMarkerColorMixer = CreateColorMixer( pan, "hitmarkers_kill_color" )
     killMarkerColorMixer:SetLabel("Kill Color")
+
+    local numberOutlineColorMixer = CreateColorMixer( pan, "hitmarkers_number_outline_color" )
+    numberOutlineColorMixer:SetLabel("Number Outline Color")
+    
 
     local _onSelect = presetPanel.OnSelect -- Call original function first.
     function presetPanel:OnSelect( id, value, data )
@@ -105,26 +118,13 @@ local function OpenHitmarkersMenu(icon, window)
         markerColorMixer:SetColor( string.ToColor( data.hitmarkers_color ) )
         headshotMarkerColorMixer:SetColor( string.ToColor( data.hitmarkers_headshot_color ) )
         killMarkerColorMixer:SetColor( string.ToColor( data.hitmarkers_kill_color ) )
+        numberOutlineColorMixer:SetColor( string.ToColor( data.hitmarkers_number_outline_color ) )
     end
 
     markerColorMixer:SetColor( string.ToColor( HITMARKERS_IMPROVED.CVARS.markersColor:GetString() ) )
     headshotMarkerColorMixer:SetColor( string.ToColor( HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString() ) )
     killMarkerColorMixer:SetColor( string.ToColor( HITMARKERS_IMPROVED.CVARS.markersKillColor:GetString() ) )
-
-    function markerColorMixer:ValueChanged( color )
-        local r, g, b = color.r, color.g, color.b
-        RunConsoleCommand( "hitmarkers_color", r .. " " .. g .. " " .. b )
-    end
-
-    function headshotMarkerColorMixer:ValueChanged( color )
-        local r, g, b = color.r, color.g, color.b
-        RunConsoleCommand( "hitmarkers_headshot_color", r .. " " .. g .. " " .. b )
-    end
-
-    function killMarkerColorMixer:ValueChanged( color )
-        local r, g, b = color.r, color.g, color.b
-        RunConsoleCommand( "hitmarkers_kill_color", r .. " " .. g .. " " .. b )
-    end
+    numberOutlineColorMixer:SetColor( string.ToColor( HITMARKERS_IMPROVED.CVARS.numberOutlineColor:GetString() ) )
 
     DividerLabel( pan, "Armor Icon Settings" )
 
