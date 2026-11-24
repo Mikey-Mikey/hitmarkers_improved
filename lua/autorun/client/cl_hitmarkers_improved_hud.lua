@@ -1,36 +1,54 @@
-local markerHistory = {}
-
 HITMARKERS_IMPROVED = HITMARKERS_IMPROVED or {}
+HITMARKERS_IMPROVED.CVARS = {}
 
-HITMARKERS_IMPROVED.CVARS = {
-    markersEnabled = CreateClientConVar( "hitmarkers_enabled", "1", true, false, "enable/disable hitmarkers"),
-    markersOneOnly = CreateClientConVar( "hitmarkers_oneonly", "1", true, false, "show only one hitmarker at a time"),
-    markersOffsetAngle = CreateClientConVar( "hitmarkers_offset_angle", "45", true, false, "offset angle of hitmarkers in degrees"),
-    markersCount = CreateClientConVar( "hitmarkers_count", "4", true, false, "number of hitmarkers to show around the crosshair", 1, 360 ),
-    markersLifetime = CreateClientConVar( "hitmarkers_lifetime", "0.5", true, false, "lifetime of hitmarkers in seconds"),
-    markersLength = CreateClientConVar( "hitmarkers_length", "20", true, false, "length of hitmarkers"),
-    markersWidth = CreateClientConVar( "hitmarkers_width", "60", true, false, "width of hitmarkers"),
-    markersSpacing = CreateClientConVar( "hitmarkers_spacing", "10", true, false, "spacing of hitmarkers"),
-    markersRotSpeed = CreateClientConVar( "hitmarkers_rotation_speed", "0", true, false, "rotation speed of hitmarkers"),
-    markersSpreadSpeed = CreateClientConVar( "hitmarkers_spread_speed", "0", true, false, "spread speed of hitmarkers"),
-    markersColor = CreateClientConVar( "hitmarkers_color", "255 255 255", true, false, "color of hitmarkers in RGB format"),
-    markersHeadshotColor = CreateClientConVar( "hitmarkers_headshot_color", "255 255 255", true, false, "color of headshot hitmarkers in RGB format"),
-    markersKillColor = CreateClientConVar( "hitmarkers_kill_color", "255 0 0", true, false, "color of kill hitmarkers in RGB format"),
-    markersVolume = CreateClientConVar( "hitmarkers_volume", "1", true, false, "volume of hitmarkers"),
-    markersSound = CreateClientConVar( "hitmarkers_sound", "hitmarkers_improved/hitmarker.ogg", true, false, "sound of hitmarkers"),
-    markersHeadSound = CreateClientConVar( "hitmarkers_head_sound", "hitmarkers_improved/hitmarker_head.ogg", true, false, "sound of headshot hitmarkers"),
-    markersKillSound = CreateClientConVar( "hitmarkers_kill_sound", "hitmarkers_improved/hitmarker_kill.ogg", true, false, "sound of kill hitmarkers"),
-    armorEnabled = CreateClientConVar( "hitmarkers_armor_enabled", "1", true, false, "enable/disable armor indication"),
-    armorSymbol = CreateClientConVar( "hitmarkers_armor_symbol", "0", true, false, "enable/disable armor symbol"),
-    armorX = CreateClientConVar( "hitmarkers_armor_x", "-0.05", true, false, "x offset of armor symbol" ),
-    armorY = CreateClientConVar( "hitmarkers_armor_y", "0", true, false, "y offset of armor symbol" ),
-    fontSize = CreateClientConVar( "hitmarkers_fontsize", "8", true, false, "size of the damage text" ),
-    numbersWorldSpace = CreateClientConVar( "hitmarkers_worldspace_numbers", "0", true, false, "show the damage numbers in worldspace" ),
-    numberOutlineColor = CreateClientConVar( "hitmarkers_number_outline_color", "0", true, false, "outline color for the damage numbers" ),
+local cfg = {}
+
+local cvarReaders = {
+    bool = function( cvar ) return cvar:GetBool() end,
+    int = function( cvar ) return cvar:GetInt() end,
+    float = function( cvar ) return cvar:GetFloat() end,
+    string = function( cvar ) return cvar:GetString() end,
+    color = function( cvar ) return string.ToColor( cvar:GetString() ) end,
 }
 
+local function AddConVar( key, kind, name, default, help, min, max )
+    local cvar = CreateClientConVar( name, default, true, false, help, min, max )
+    local read = cvarReaders[kind]
+
+    HITMARKERS_IMPROVED.CVARS[key] = cvar
+    cfg[key] = read( cvar )
+
+    cvars.AddChangeCallback( name, function() cfg[key] = read( cvar ) end, "HitmarkersImprovedCache" )
+end
+
+AddConVar( "markersEnabled", "bool", "hitmarkers_enabled", "1", "enable/disable hitmarkers" )
+AddConVar( "markersOneOnly", "bool", "hitmarkers_oneonly", "1", "show only one hitmarker at a time" )
+AddConVar( "markersOffsetAngle", "float", "hitmarkers_offset_angle", "45", "offset angle of hitmarkers in degrees" )
+AddConVar( "markersCount", "int", "hitmarkers_count", "4", "number of hitmarkers to show around the crosshair", 1, 360 )
+AddConVar( "markersLifetime", "float", "hitmarkers_lifetime", "0.5", "lifetime of hitmarkers in seconds" )
+AddConVar( "markersLength", "float", "hitmarkers_length", "20", "length of hitmarkers" )
+AddConVar( "markersWidth", "float", "hitmarkers_width", "60", "width of hitmarkers" )
+AddConVar( "markersSpacing", "float", "hitmarkers_spacing", "10", "spacing of hitmarkers" )
+AddConVar( "markersRotSpeed", "float", "hitmarkers_rotation_speed", "0", "rotation speed of hitmarkers" )
+AddConVar( "markersSpreadSpeed", "float", "hitmarkers_spread_speed", "0", "spread speed of hitmarkers" )
+AddConVar( "markersColor", "color", "hitmarkers_color", "255 255 255", "color of hitmarkers in RGB format" )
+AddConVar( "markersHeadshotColor", "color", "hitmarkers_headshot_color", "255 255 255", "color of headshot hitmarkers in RGB format" )
+AddConVar( "markersKillColor", "color", "hitmarkers_kill_color", "255 0 0", "color of kill hitmarkers in RGB format" )
+AddConVar( "markersVolume", "float", "hitmarkers_volume", "1", "volume of hitmarkers" )
+AddConVar( "markersSound", "string", "hitmarkers_sound", "hitmarkers_improved/hitmarker.ogg", "sound of hitmarkers" )
+AddConVar( "markersHeadSound", "string", "hitmarkers_head_sound", "hitmarkers_improved/hitmarker_head.ogg", "sound of headshot hitmarkers" )
+AddConVar( "markersKillSound", "string", "hitmarkers_kill_sound", "hitmarkers_improved/hitmarker_kill.ogg", "sound of kill hitmarkers" )
+AddConVar( "armorEnabled", "bool", "hitmarkers_armor_enabled", "1", "enable/disable armor indication" )
+AddConVar( "armorSymbol", "bool", "hitmarkers_armor_symbol", "0", "enable/disable armor symbol" )
+AddConVar( "armorX", "float", "hitmarkers_armor_x", "-0.05", "x offset of armor symbol" )
+AddConVar( "armorY", "float", "hitmarkers_armor_y", "0", "y offset of armor symbol" )
+AddConVar( "fontSize", "float", "hitmarkers_fontsize", "8", "size of the damage text" )
+AddConVar( "numbersWorldSpace", "bool", "hitmarkers_worldspace_numbers", "0", "show the damage numbers in worldspace" )
+AddConVar( "numberOutline", "bool", "hitmarkers_number_outline", "1", "enable/disable outlines on the damage numbers" )
+AddConVar( "numberOutlineColor", "color", "hitmarkers_number_outlinecolor", "0 0 0 50", "outline color for the damage numbers" )
+
 local function CreateMarkerFont()
-    local n = HITMARKERS_IMPROVED.CVARS.fontSize:GetFloat()
+    local n = HITMARKERS_IMPROVED.CVARS.fontSize:GetFloat() -- read directly: callback order vs. the cfg cache isn't guaranteed
     if n <= 0 then n = 8 end
 
     surface.CreateFont("hitmarkers_improved_markerfont", {
@@ -99,6 +117,7 @@ local function AddDamageNumber(dmg, entID, death, dmgPos)
     end
 end
 
+local markerHistory = {}
 net.Receive("hitmarkers_improved_hit", function()
     local dmgTook = net.ReadUInt( 16 )
     local headshot = net.ReadBool()
@@ -115,9 +134,9 @@ net.Receive("hitmarkers_improved_hit", function()
         local last = markerHistory[#markerHistory]
         if last then
             if death and not last.death then
-                playSound( HITMARKERS_IMPROVED.CVARS.markersKillSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
+                playSound( cfg.markersKillSound, cfg.markersVolume )
             elseif headshot and not last.headshot and not last.death then
-                playSound( HITMARKERS_IMPROVED.CVARS.markersHeadSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
+                playSound( cfg.markersHeadSound, cfg.markersVolume )
             end
             last.death = last.death or death
             last.headshot = last.headshot or headshot
@@ -127,14 +146,14 @@ net.Receive("hitmarkers_improved_hit", function()
     end
 
     if death then
-        playSound( HITMARKERS_IMPROVED.CVARS.markersKillSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
+        playSound( cfg.markersKillSound, cfg.markersVolume )
     elseif headshot then
-        playSound( HITMARKERS_IMPROVED.CVARS.markersHeadSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
+        playSound( cfg.markersHeadSound, cfg.markersVolume )
     else
-        playSound( HITMARKERS_IMPROVED.CVARS.markersSound:GetString(), HITMARKERS_IMPROVED.CVARS.markersVolume:GetFloat() )
+        playSound( cfg.markersSound, cfg.markersVolume )
     end
 
-    if HITMARKERS_IMPROVED.CVARS.markersOneOnly:GetBool() then
+    if cfg.markersOneOnly then
         markerHistory = {}
     end
 
@@ -146,7 +165,7 @@ net.Receive("hitmarkers_improved_hit", function()
         life = 1,
         angle = 0,
         spread = 0,
-        lifetime = HITMARKERS_IMPROVED.CVARS.markersLifetime:GetFloat(),
+        lifetime = cfg.markersLifetime,
     } )
 
     dmgFrame = FrameNumber()
@@ -176,27 +195,34 @@ local function DrawHitmarker( x, y, length, width, rotation, headshot )
     end
 end
 
+local outlineColor = Color( 0, 0, 0 )
 hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
-    if not HITMARKERS_IMPROVED.CVARS.markersEnabled:GetBool() then return end
+    if not cfg.markersEnabled then return end
+
+    local markerHistoryCount = #markerHistory
+    local dmgNumTableCount = #dmgNumTable
+    if markerHistoryCount == 0 and dmgNumTableCount == 0 then return end
 
     local scrW, scrH = ScrW(), ScrH()
-    local screenRatio = ScrH() / 1080
-    local count = HITMARKERS_IMPROVED.CVARS.markersCount:GetInt()
-    local angleOffset = HITMARKERS_IMPROVED.CVARS.markersOffsetAngle:GetFloat()
-    local length = HITMARKERS_IMPROVED.CVARS.markersLength:GetFloat()
-    local width = HITMARKERS_IMPROVED.CVARS.markersWidth:GetFloat()
-    local spacing = HITMARKERS_IMPROVED.CVARS.markersSpacing:GetFloat()
-    local rotSpeed = HITMARKERS_IMPROVED.CVARS.markersRotSpeed:GetFloat()
-    local spreadSpeed = HITMARKERS_IMPROVED.CVARS.markersSpreadSpeed:GetFloat()
-    local color = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersColor:GetString() )
-    local headshotColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString() )
-    local killColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersKillColor:GetString() )
-    local worldspaceNumbers = HITMARKERS_IMPROVED.CVARS.numbersWorldSpace:GetBool()
-    local numberOutlineColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.numberOutlineColor:GetString() )
+    local screenRatio = scrH / 1080
+    local count = cfg.markersCount
+    local angleOffset = cfg.markersOffsetAngle
+    local length = cfg.markersLength
+    local width = cfg.markersWidth
+    local spacing = cfg.markersSpacing
+    local rotSpeed = cfg.markersRotSpeed
+    local spreadSpeed = cfg.markersSpreadSpeed
+    local color = cfg.markersColor
+    local headshotColor = cfg.markersHeadshotColor
+    local killColor = cfg.markersKillColor
+    local armorEnabled = cfg.armorEnabled
+    local worldspaceNumbers = cfg.numbersWorldSpace
+    local numberOutline = cfg.numberOutline
+    local numberOutlineColor = cfg.numberOutlineColor
 
-    for i = #markerHistory, 1, -1 do
+    for i = markerHistoryCount, 1, -1 do
         local markerData = markerHistory[i]
-        local hadArmor = markerData.hadArmor and HITMARKERS_IMPROVED.CVARS.armorEnabled:GetBool()
+        local hadArmor = markerData.hadArmor and armorEnabled
         local showHeadshot = markerData.headshot
         local death = markerData.death
 
@@ -259,11 +285,11 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
         if hadArmor then
             surface.SetDrawColor( 0, 127, 255, alpha )
 
-            if HITMARKERS_IMPROVED.CVARS.armorSymbol:GetBool() then
+            if cfg.armorSymbol then
                 surface.SetMaterial( armorMat )
                 surface.DrawTexturedRectRotated(
-                    scrW * 0.5 + HITMARKERS_IMPROVED.CVARS.armorX:GetFloat() * scrW * 0.5,
-                    scrH * 0.5 + HITMARKERS_IMPROVED.CVARS.armorY:GetFloat() * scrH * 0.5,
+                    scrW * 0.5 + cfg.armorX * scrW * 0.5,
+                    scrH * 0.5 + cfg.armorY * scrH * 0.5,
                     32 * screenRatio,
                     32 * screenRatio,
                     0
@@ -285,25 +311,29 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     surface.SetFont( "hitmarkers_improved_markerfont" )
 
     local dmgYOffset = 0
-    for i = #dmgNumTable, 1, -1 do
+    for i = dmgNumTableCount, 1, -1 do
         local dmgNumber = dmgNumTable[i]
         local death = dmgNumber.death
         local dmgAlpha = math.Remap( 1 - ( 1 - dmgNumber.life )^10, 0.8, 1, 0, 1 ) * 255
-        local outlineColor = numberOutlineColor:Copy()
         if death then
             surface.SetTextColor( killColor.r, killColor.g, killColor.b, dmgAlpha )
         else
             surface.SetTextColor( color.r, color.g, color.b, dmgAlpha )
         end
 
-        outlineColor.a = dmgAlpha
+        outlineColor.r = numberOutlineColor.r
+        outlineColor.g = numberOutlineColor.g
+        outlineColor.b = numberOutlineColor.b
+        outlineColor.a = numberOutlineColor.a * dmgAlpha / 255
 
         local screenDmgPos = (dmgNumber.dmgPos):ToScreen()
 
         local textW, textH = surface.GetTextSize( tostring( dmgNumber.dmg ) )
         if worldspaceNumbers and screenDmgPos.visible then
             draw.SimpleText( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-            draw.SimpleTextOutlined( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, outlineColor )
+            if numberOutline then
+                draw.SimpleTextOutlined( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, outlineColor )
+            end
         elseif not worldspaceNumbers then
             draw.SimpleText(
                 tostring( dmgNumber.dmg ),
@@ -312,14 +342,16 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
                 surface.GetTextColor(),
                 TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER
             )
-            draw.SimpleTextOutlined(
-                tostring( dmgNumber.dmg ),
-                "hitmarkers_improved_markerfont",
-                scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset,
-                surface.GetTextColor(),
-                TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER,
-                1, outlineColor
-            )
+            if numberOutline then
+                draw.SimpleTextOutlined(
+                    tostring( dmgNumber.dmg ),
+                    "hitmarkers_improved_markerfont",
+                    scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset,
+                    surface.GetTextColor(),
+                    TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER,
+                    1, outlineColor
+                )
+            end
         end
 
         dmgYOffset = dmgYOffset + textH * ( 1 - ( 1 - dmgNumber.life )^10 )
