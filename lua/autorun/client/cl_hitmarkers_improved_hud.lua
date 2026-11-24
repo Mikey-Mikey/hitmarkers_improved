@@ -195,7 +195,6 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     local worldspaceNumbers = HITMARKERS_IMPROVED.CVARS.numbersWorldSpace:GetBool()
     local numberOutline = HITMARKERS_IMPROVED.CVARS.numberOutline:GetBool()
     local numberOutlineColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.numberOutlineColor:GetString() )
-    print( numberOutlineColor )
 
     for i = #markerHistory, 1, -1 do
         local markerData = markerHistory[i]
