@@ -114,6 +114,7 @@ local function OpenHitmarkersMenu(icon, window)
     local killMarkerColorMixer = CreateColorMixer( pan, "hitmarkers_kill_color" )
     killMarkerColorMixer:SetLabel("Kill Color")
 
+    pan:CheckBox("Number Outlines", "hitmarkers_number_outline")
     local numberOutlineColorMixer = CreateColorMixer( pan, "hitmarkers_number_outlinecolor" )
     numberOutlineColorMixer:SetLabel("Number Outline Color")
 
@@ -143,7 +144,6 @@ local function OpenHitmarkersMenu(icon, window)
     DividerLabel( pan, "Font Settings" )
     pan:NumSlider("Font Size", "hitmarkers_fontsize", 4, 32, 0)
     pan:CheckBox("Worldspace Numbers", "hitmarkers_worldspace_numbers")
-    pan:CheckBox("Number Outlines", "hitmarkers_number_outline")
 
     DividerLabel( pan, "Sound Settings" )
 
