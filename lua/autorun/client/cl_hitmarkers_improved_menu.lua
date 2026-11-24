@@ -64,6 +64,7 @@ local function OpenHitmarkersMenu(icon, window)
         ["hitmarkers_armor_y"] = 0,
 
         ["hitmarkers_fontsize"] = 8,
+        ["hitmarkers_worldspace_numbers"] = 0,
     } )
 
     pan:CheckBox( "Enable Hitmarkers", "hitmarkers_enabled" )
@@ -134,6 +135,7 @@ local function OpenHitmarkersMenu(icon, window)
 
     DividerLabel( pan, "Font Settings" )
     pan:NumSlider("Font Size", "hitmarkers_fontsize", 4, 32, 0)
+    pan:CheckBox("Worldspace Numbers", "hitmarkers_worldspace_numbers")
 
     DividerLabel( pan, "Sound Settings" )
 

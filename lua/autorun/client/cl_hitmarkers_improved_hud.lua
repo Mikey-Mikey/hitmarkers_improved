@@ -25,6 +25,7 @@ HITMARKERS_IMPROVED.CVARS = {
     armorX = CreateClientConVar( "hitmarkers_armor_x", "-0.05", true, false, "x offset of armor symbol" ),
     armorY = CreateClientConVar( "hitmarkers_armor_y", "0", true, false, "y offset of armor symbol" ),
     fontSize = CreateClientConVar( "hitmarkers_fontsize", "8", true, false, "size of the damage text" ),
+    numbersWorldSpace = CreateClientConVar( "hitmarkers_worldspace_numbers", "0", true, false, "show the damage numbers in worldspace" ),
 }
 
 local function CreateMarkerFont()
@@ -72,7 +73,7 @@ local function GetDamageNumber(entID)
     end
 end
 
-local function AddDamageNumber(dmg, entID, death)
+local function AddDamageNumber(dmg, entID, death, dmgPos)
     if #dmgNumTable > 6 and dmgNumTable[#dmgNumTable] then
         dmgNumTable[#dmgNumTable].shouldRemove = true
     end
@@ -83,11 +84,13 @@ local function AddDamageNumber(dmg, entID, death)
     if oldNumber then
         oldNumber.life = 1
         oldNumber.dmg = oldNumber.dmg + dmg
+        oldNumber.dmgPos = dmgPos
         oldNumber.death = death
     else
         table.insert( dmgNumTable, 1, {
             entID = entID,
             dmg = dmg,
+            dmgPos = dmgPos,
             death = death,
             life = 1,
             shouldRemove = false
@@ -101,8 +104,9 @@ net.Receive("hitmarkers_improved_hit", function()
     local death = net.ReadBool()
     local hadArmor = net.ReadBool()
     local entID = net.ReadUInt(4) -- per-attacker target slot, must match SLOT_BITS on the server
+    local dmgPos = net.ReadVector()
 
-    AddDamageNumber(dmgTook, entID, death)
+    AddDamageNumber(dmgTook, entID, death, dmgPos)
 
     -- Multiple hits in one frame (shotgun pellets): merge into the last marker
     -- so a kill/headshot from a later pellet isn't lost.
@@ -186,6 +190,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     local color = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersColor:GetString() )
     local headshotColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString() )
     local killColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersKillColor:GetString() )
+    local worldspaceNumbers = HITMARKERS_IMPROVED.CVARS.numbersWorldSpace:GetBool()
 
     for i = #markerHistory, 1, -1 do
         local markerData = markerHistory[i]
@@ -288,10 +293,16 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
             surface.SetTextColor( color.r, color.g, color.b, dmgAlpha )
         end
 
-        local textW, textH = surface.GetTextSize( tostring( dmgNumber.dmg ) )
+        local screenDmgPos = (dmgNumber.dmgPos):ToScreen()
 
-        surface.SetTextPos( scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset )
-        surface.DrawText( tostring( dmgNumber.dmg ) )
+        local textW, textH = surface.GetTextSize( tostring( dmgNumber.dmg ) )
+        if worldspaceNumbers and screenDmgPos.visible then
+            surface.SetTextPos( screenDmgPos.x, screenDmgPos.y )
+            surface.DrawText( tostring( dmgNumber.dmg ) )
+        elseif not worldspaceNumbers then
+            surface.SetTextPos( scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset )
+            surface.DrawText( tostring( dmgNumber.dmg ) )
+        end
 
         dmgYOffset = dmgYOffset + textH * ( 1 - ( 1 - dmgNumber.life )^10 )
 

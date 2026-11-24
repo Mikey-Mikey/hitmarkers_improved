@@ -73,5 +73,6 @@ hook.Add( "PostEntityTakeDamage", "HitmarkersImproved", function( ent, dmginfo, 
     net.WriteBool( currentHealth <= 0 )
     net.WriteBool( ent:IsPlayer() and hadArmor or false )
     net.WriteUInt( getTargetSlot( attacker, ent ), SLOT_BITS )
+    net.WriteVector( dmginfo:IsExplosionDamage() and ent:WorldSpaceCenter() or dmginfo:GetDamagePosition() )
     net.Send( attacker )
 end )
