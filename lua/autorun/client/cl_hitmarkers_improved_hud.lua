@@ -289,18 +289,21 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
         local dmgNumber = dmgNumTable[i]
         local death = dmgNumber.death
         local dmgAlpha = math.Remap( 1 - ( 1 - dmgNumber.life )^10, 0.8, 1, 0, 1 ) * 255
+        local outlineColor = numberOutlineColor:Copy()
         if death then
             surface.SetTextColor( killColor.r, killColor.g, killColor.b, dmgAlpha )
         else
             surface.SetTextColor( color.r, color.g, color.b, dmgAlpha )
         end
 
+        outlineColor.a = dmgAlpha
+
         local screenDmgPos = (dmgNumber.dmgPos):ToScreen()
 
         local textW, textH = surface.GetTextSize( tostring( dmgNumber.dmg ) )
         if worldspaceNumbers and screenDmgPos.visible then
             draw.SimpleText( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-            draw.SimpleTextOutlined( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, numberOutlineColor )
+            draw.SimpleTextOutlined( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, outlineColor )
         elseif not worldspaceNumbers then
             draw.SimpleText(
                 tostring( dmgNumber.dmg ),
@@ -315,7 +318,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
                 scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset,
                 surface.GetTextColor(),
                 TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER,
-                1, numberOutlineColor
+                1, outlineColor
             )
         end
 
