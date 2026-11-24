@@ -26,8 +26,8 @@ HITMARKERS_IMPROVED.CVARS = {
     armorY = CreateClientConVar( "hitmarkers_armor_y", "0", true, false, "y offset of armor symbol" ),
     fontSize = CreateClientConVar( "hitmarkers_fontsize", "8", true, false, "size of the damage text" ),
     numbersWorldSpace = CreateClientConVar( "hitmarkers_worldspace_numbers", "0", true, false, "show the damage numbers in worldspace" ),
-    numberOutline = CreateClientConVar( "hitmarkers_number_outline", "0", true, false, "enable/disable outlines on the damage numbers" ),
-    numberOutlineColor = CreateClientConVar( "hitmarkers_number_outlinecolor", "0 0 0", true, false, "outline color for the damage numbers" ),
+    numberOutline = CreateClientConVar( "hitmarkers_number_outline", "1", true, false, "enable/disable outlines on the damage numbers" ),
+    numberOutlineColor = CreateClientConVar( "hitmarkers_number_outlinecolor", "0 0 0 50", true, false, "outline color for the damage numbers" ),
 }
 
 local function CreateMarkerFont()
@@ -195,6 +195,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     local worldspaceNumbers = HITMARKERS_IMPROVED.CVARS.numbersWorldSpace:GetBool()
     local numberOutline = HITMARKERS_IMPROVED.CVARS.numberOutline:GetBool()
     local numberOutlineColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.numberOutlineColor:GetString() )
+    print( numberOutlineColor )
 
     for i = #markerHistory, 1, -1 do
         local markerData = markerHistory[i]
@@ -298,7 +299,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
             surface.SetTextColor( color.r, color.g, color.b, dmgAlpha )
         end
 
-        outlineColor.a = dmgAlpha
+        outlineColor.a = outlineColor.a * dmgAlpha / 255
 
         local screenDmgPos = (dmgNumber.dmgPos):ToScreen()
 
