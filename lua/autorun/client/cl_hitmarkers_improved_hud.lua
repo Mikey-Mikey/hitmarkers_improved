@@ -26,7 +26,8 @@ HITMARKERS_IMPROVED.CVARS = {
     armorY = CreateClientConVar( "hitmarkers_armor_y", "0", true, false, "y offset of armor symbol" ),
     fontSize = CreateClientConVar( "hitmarkers_fontsize", "8", true, false, "size of the damage text" ),
     numbersWorldSpace = CreateClientConVar( "hitmarkers_worldspace_numbers", "0", true, false, "show the damage numbers in worldspace" ),
-    numberOutlineColor = CreateClientConVar( "hitmarkers_number_outline_color", "0", true, false, "outline color for the damage numbers" ),
+    numberOutline = CreateClientConVar( "hitmarkers_number_outline", "0", true, false, "enable/disable outlines on the damage numbers" ),
+    numberOutlineColor = CreateClientConVar( "hitmarkers_number_outlinecolor", "0 0 0", true, false, "outline color for the damage numbers" ),
 }
 
 local function CreateMarkerFont()
@@ -192,6 +193,7 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
     local headshotColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersHeadshotColor:GetString() )
     local killColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.markersKillColor:GetString() )
     local worldspaceNumbers = HITMARKERS_IMPROVED.CVARS.numbersWorldSpace:GetBool()
+    local numberOutline = HITMARKERS_IMPROVED.CVARS.numberOutline:GetBool()
     local numberOutlineColor = string.ToColor( HITMARKERS_IMPROVED.CVARS.numberOutlineColor:GetString() )
 
     for i = #markerHistory, 1, -1 do
@@ -303,7 +305,9 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
         local textW, textH = surface.GetTextSize( tostring( dmgNumber.dmg ) )
         if worldspaceNumbers and screenDmgPos.visible then
             draw.SimpleText( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-            draw.SimpleTextOutlined( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, outlineColor )
+            if numberOutline then
+                draw.SimpleTextOutlined( tostring( dmgNumber.dmg ), "hitmarkers_improved_markerfont", screenDmgPos.x, screenDmgPos.y, surface.GetTextColor(), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, outlineColor )
+            end
         elseif not worldspaceNumbers then
             draw.SimpleText(
                 tostring( dmgNumber.dmg ),
@@ -312,14 +316,16 @@ hook.Add("HUDPaint", "HitmarkersImprovedHUD", function()
                 surface.GetTextColor(),
                 TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER
             )
-            draw.SimpleTextOutlined(
-                tostring( dmgNumber.dmg ),
-                "hitmarkers_improved_markerfont",
-                scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset,
-                surface.GetTextColor(),
-                TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER,
-                1, outlineColor
-            )
+            if numberOutline then
+                draw.SimpleTextOutlined(
+                    tostring( dmgNumber.dmg ),
+                    "hitmarkers_improved_markerfont",
+                    scrW * 0.5 + 32 * screenRatio, scrH * 0.5 - textH * 0.5 + dmgYOffset,
+                    surface.GetTextColor(),
+                    TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER,
+                    1, outlineColor
+                )
+            end
         end
 
         dmgYOffset = dmgYOffset + textH * ( 1 - ( 1 - dmgNumber.life )^10 )

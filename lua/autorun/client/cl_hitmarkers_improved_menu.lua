@@ -52,35 +52,42 @@ local function OpenHitmarkersMenu(icon, window)
     pan:SetName( "" )
     pan:SetHeaderHeight(0)
 
-    local presetPanel = pan:ToolPresets( "hitmarkers_presets", {
-        ["hitmarkers_enabled"] = 1,
-        ["hitmarkers_oneonly"] = 1,
+    local presetDefaults = {}
+    for _, cvarName in ipairs( {
+        "hitmarkers_enabled",
+        "hitmarkers_oneonly",
 
-        ["hitmarkers_count"] = 4,
-        ["hitmarkers_offset_angle"] = 45,
-        ["hitmarkers_lifetime"] = 0.5,
-        ["hitmarkers_length"] = 20,
-        ["hitmarkers_width"] = 60,
-        ["hitmarkers_spacing"] = 10,
-        ["hitmarkers_rotation_speed"] = 0,
-        ["hitmarkers_spread_speed"] = 0,
-        ["hitmarkers_color"] = "255 255 255",
-        ["hitmarkers_headshot_color"] = "255 255 255",
-        ["hitmarkers_kill_color"] = "255 0 0",
+        "hitmarkers_count",
+        "hitmarkers_offset_angle",
+        "hitmarkers_lifetime",
+        "hitmarkers_length",
+        "hitmarkers_width",
+        "hitmarkers_spacing",
+        "hitmarkers_rotation_speed",
+        "hitmarkers_spread_speed",
+        "hitmarkers_color",
+        "hitmarkers_headshot_color",
+        "hitmarkers_kill_color",
 
-        ["hitmarkers_volume"] = 1,
-        ["hitmarkers_sound"] = "hitmarkers_improved/hitmarker.ogg",
-        ["hitmarkers_head_sound"] = "hitmarkers_improved/hitmarker_head.ogg",
-        ["hitmarkers_kill_sound"] = "hitmarkers_improved/hitmarker_kill.ogg",
+        "hitmarkers_volume",
+        "hitmarkers_sound",
+        "hitmarkers_head_sound",
+        "hitmarkers_kill_sound",
 
-        ["hitmarkers_armor_enabled"] = 1,
-        ["hitmarkers_armor_x"] = -0.05,
-        ["hitmarkers_armor_y"] = 0,
+        "hitmarkers_armor_enabled",
+        "hitmarkers_armor_x",
+        "hitmarkers_armor_y",
 
-        ["hitmarkers_fontsize"] = 8,
-        ["hitmarkers_worldspace_numbers"] = 0,
-        ["hitmarkers_number_outline_color"] = "0 0 0",
-    } )
+        "hitmarkers_fontsize",
+        "hitmarkers_worldspace_numbers",
+        "hitmarkers_number_outline",
+        "hitmarkers_number_outlinecolor",
+    } ) do
+        local cvar = GetConVar( cvarName )
+        if cvar then presetDefaults[cvarName] = cvar:GetDefault() end
+    end
+
+    local presetPanel = pan:ToolPresets( "hitmarkers_presets", presetDefaults )
 
     pan:CheckBox( "Enable Hitmarkers", "hitmarkers_enabled" )
     pan:CheckBox( "Show Only One Hitmarker At A Time", "hitmarkers_oneonly" )
@@ -107,9 +114,9 @@ local function OpenHitmarkersMenu(icon, window)
     local killMarkerColorMixer = CreateColorMixer( pan, "hitmarkers_kill_color" )
     killMarkerColorMixer:SetLabel("Kill Color")
 
-    local numberOutlineColorMixer = CreateColorMixer( pan, "hitmarkers_number_outline_color" )
+    local numberOutlineColorMixer = CreateColorMixer( pan, "hitmarkers_number_outlinecolor" )
     numberOutlineColorMixer:SetLabel("Number Outline Color")
-    
+
 
     local _onSelect = presetPanel.OnSelect -- Call original function first.
     function presetPanel:OnSelect( id, value, data )
@@ -118,7 +125,7 @@ local function OpenHitmarkersMenu(icon, window)
         markerColorMixer:SetColor( string.ToColor( data.hitmarkers_color ) )
         headshotMarkerColorMixer:SetColor( string.ToColor( data.hitmarkers_headshot_color ) )
         killMarkerColorMixer:SetColor( string.ToColor( data.hitmarkers_kill_color ) )
-        numberOutlineColorMixer:SetColor( string.ToColor( data.hitmarkers_number_outline_color ) )
+        numberOutlineColorMixer:SetColor( string.ToColor( data.hitmarkers_number_outlinecolor ) )
     end
 
     markerColorMixer:SetColor( string.ToColor( HITMARKERS_IMPROVED.CVARS.markersColor:GetString() ) )
@@ -136,6 +143,7 @@ local function OpenHitmarkersMenu(icon, window)
     DividerLabel( pan, "Font Settings" )
     pan:NumSlider("Font Size", "hitmarkers_fontsize", 4, 32, 0)
     pan:CheckBox("Worldspace Numbers", "hitmarkers_worldspace_numbers")
+    pan:CheckBox("Number Outlines", "hitmarkers_number_outline")
 
     DividerLabel( pan, "Sound Settings" )
 
