@@ -18,8 +18,8 @@ local function CreateColorMixer( panel, cvarName )
     colorMixer:SetLabel("Basic Color")
 
     function colorMixer:ValueChanged( color )
-        local r, g, b = color.r, color.g, color.b
-        RunConsoleCommand( cvarName, r .. " " .. g .. " " .. b )
+        local r, g, b, a = color.r, color.g, color.b, color.a
+        RunConsoleCommand( cvarName, r .. " " .. g .. " " .. b .. " " .. a )
     end
 
     return colorMixer
