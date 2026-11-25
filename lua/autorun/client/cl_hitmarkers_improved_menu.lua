@@ -27,7 +27,7 @@ end
 
 local last_menu = nil
 
-local function OpenHitmarkersMenu(icon, window)
+local function OpenHitmarkersMenu()
     if IsValid( last_menu ) then last_menu:Close() end
 
     window = vgui.Create( "DFrame" )
@@ -192,6 +192,10 @@ local function OpenHitmarkersMenu(icon, window)
         menu:Open()
     end
 end
+
+concommand.Add("hitmarkers_openmenu", function()
+    OpenHitmarkersMenu()
+end)
 
 list.Set( "DesktopWindows", "Customizable Hitmarkers Menu", {
 	title = "Hitmarkers",
